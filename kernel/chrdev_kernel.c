@@ -4,6 +4,10 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/errno.h>
+#define MAX_BUF_SIZE 256
 
 struct cdev_data {
     struct cdev cdev;
@@ -12,6 +16,7 @@ struct cdev_data {
 static int cdev_major = 0;
 static struct class *mycdev_class = NULL;
 static struct cdev_data mycdev_data;
+static unsigned char *user_data;
 
 static int cdev_open (struct inode *inode, struct file *file) {
     printk(KERN_DEBUG "Entering: %s\n", __func__);
@@ -29,12 +34,39 @@ static long cdev_ioctl (struct file *file, unsigned int cmd, unsigned long arg) 
 }
 
 static ssize_t cdev_read (struct file *file, char __user *buf, size_t count, loff_t *offset) {
+    size_t udatalen;
+
     printk(KERN_DEBUG "Entering: %s\n", __func__);
-    return 0;
+    udatalen = strlen(user_data);
+    printk(KERN_DEBUG "user data len: %zu\n", udatalen);
+    if (count > udatalen)
+        count = udatalen;
+
+    if (copy_to_user(buf, user_data, count) != 0) {
+        printk(KERN_ERR "Copy data to user failed\n");
+        return -EFAULT;
+    }
+
+    return count;
 }
 
 static ssize_t cdev_write (struct file *file, const char __user *buf, size_t count, loff_t *offset) {
+    size_t udatalen = MAX_BUF_SIZE;
+    size_t nbr_chars = 0;
+
     printk(KERN_DEBUG "Entering: %s\n", __func__);
+    if (count < udatalen)
+        udatalen = count;
+
+    nbr_chars = copy_from_user(user_data, buf, udatalen);
+    if (nbr_chars == 0) {
+        printk(KERN_DEBUG "Copied %zu bytes from the user\n", udatalen);
+        printk (KERN_DEBUG "Receive data from user: %s", user_data);
+    } else {
+        printk(KERN_ERR "Copy data from user failed\n");
+        return -EFAULT;
+    }
+
     return count;
 }
 
@@ -86,6 +118,16 @@ int init_module ( void ) {
         return err;
     }
 
+    user_data = (unsigned char*) kzalloc(MAX_BUF_SIZE, GFP_KERNEL);
+    if (user_data == NULL) {
+        printk (KERN_ERR "Allocation memory for data buffer failed\n");
+        device_destroy(mycdev_class, MKDEV(cdev_major, 0));
+        class_unregister(mycdev_class);
+        class_destroy(mycdev_class);
+        unregister_chrdev_region(MKDEV(cdev_major, 0), 1);
+        return -ENOMEM;
+    }
+
     return 0;
 }
 
@@ -95,6 +137,8 @@ void cleanup_module ( void ) {
     class_unregister(mycdev_class);
     class_destroy(mycdev_class);
     unregister_chrdev_region(MKDEV(cdev_major, 0), 1);
+    if (user_data != NULL)
+        kfree(user_data);
 }
 
 MODULE_DESCRIPTION("A simple Linux char driver");
