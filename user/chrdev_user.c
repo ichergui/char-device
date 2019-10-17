@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
 
         switch( c ) {
             case 'w':
-                fprintf(stdout,"The following text is the message to send to the kernel module: !!!\n");
                 memset(user_msg, 0, sizeof(user_msg));
                 strcpy(user_msg, optarg);
                 fprintf(stdout,"Writing message to the device [%s]\n", user_msg);
