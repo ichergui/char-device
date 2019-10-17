@@ -1,0 +1,3 @@
+# Rules file for the chrdev device driver
+KERNEL=="mycdev-0", SUBSYSTEM=="mycdev", MODE="0666"
+
