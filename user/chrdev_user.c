@@ -77,6 +77,7 @@ int main(int argc, char* argv[])
                 ret = write(fd, user_msg, strlen(user_msg));
                 if (ret < 0) {
                     fprintf(stderr,"write: %s\n", strerror(errno));
+                    close (fd);
                     return -1;
                 }
             break;
@@ -86,6 +87,7 @@ int main(int argc, char* argv[])
                 ret = read(fd, user_msg, MAX_BUF_SIZE);
                 if (ret < 0){
                     fprintf(stderr,"read: %s\n", strerror(errno));
+                    close(fd);
                     return -1;
                 }
                 fprintf(stdout,"The received message is: [%s]\n", user_msg);
