@@ -6,18 +6,18 @@ A basic communication between Linux kernel and user application via character de
     $ cd $HOME
     $ mkdir devel
     $ cd devel
-    $ git clone https://github.com/ichergui/char_device.git
+    $ git clone https://github.com/ichergui/char-device.git
 
 ### Build
 ##### kernel side
 
 ```bash
-$ cd $HOME/devel/char_device/kernel
+$ cd $HOME/devel/char-device/kernel
 $ make all
 ```
 ##### User side
 ```bash
-$ cd $HOME/devel/char_device/user
+$ cd $HOME/devel/char-device/user
 $ gcc -o chrdev_user chrdev_user.c
 ```
 
@@ -27,14 +27,14 @@ Specify the __user Access__ to the character device using Udev Rules.
 This permit us to give a read and write permissions.
 
 ```bash
-$ cd $HOME/devel/char_device/
+$ cd $HOME/devel/char-device/
 $ sudo cp udev/rules.d/99-chrdev.rules /etc/udev/rules.d/
 ```
 
 * Insert the character device
 
 ```bash
-$ cd $HOME/devel/char_device/kernel
+$ cd $HOME/devel/char-device/kernel
 $ sudo insmod chrdev_kernel.ko
 ```
 * __verification__
@@ -74,7 +74,7 @@ Oct 17 15:13:10 icg-machine kernel: [1467534.560342] device major number is: 236
 __1- Send a message to the Linux kernel module (chrdev_kernel)__
 
 ```bash
-$ cd $HOME/devel/char_device/user
+$ cd $HOME/devel/char-device/user
 $ ./chrdev_user -d /dev/mycdev-0 -w "Hello: ilies CHERGUI"
 Writing message to the device [Hello: ilies CHERGUI]
 $
@@ -93,7 +93,7 @@ Oct 17 15:20:46 icg-machine kernel: [1467990.299243] Entering: cdev_release
 __2- Read the latest message from Linux kernel module (chrdev_kernel)__
 
 ```bash
-$ cd $HOME/devel/char_device/user
+$ cd $HOME/devel/char-device/user
 $ ./chrdev_user -d /dev/mycdev-0 -r
 Reading from the device...
 The received message is: [Hello: ilies CHERGUI]
